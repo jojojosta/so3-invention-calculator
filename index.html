@@ -3,8 +3,8 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SO3 IC Calculator</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no">
+    <title>SO3 IC Calculator Pro</title>
     <!-- Tailwind for styling -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Babel for on-the-fly TSX transpilation -->
@@ -17,11 +17,15 @@
         background-color: #020617; 
         color: #f8fafc; 
         overflow-x: hidden;
+        padding-top: env(safe-area-inset-top);
+        padding-bottom: env(safe-area-inset-bottom);
+        padding-left: env(safe-area-inset-left);
+        padding-right: env(safe-area-inset-right);
       }
       .no-scrollbar::-webkit-scrollbar { display: none; }
       .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
       ::-webkit-scrollbar { display: none; }
-      * { -ms-overflow-style: none; scrollbar-width: none; }
+      * { -ms-overflow-style: none; scrollbar-width: none; outline: none !important; }
 
       select {
         -webkit-appearance: none;
@@ -30,22 +34,32 @@
         background-position: right 0.75rem center;
         background-size: 1rem;
       }
+      
+      button:active {
+        opacity: 0.7;
+        transform: scale(0.98);
+      }
+
+      /* Animated gradients for premium feel */
+      .bg-pro-gradient {
+        background: linear-gradient(135deg, #2563eb 0%, #7c3aed 100%);
+      }
     </style>
 
     <script type="importmap">
 {
   "imports": {
     "react": "https://esm.sh/react@19.0.0",
+    "react-dom": "https://esm.sh/react-dom@19.0.0",
     "react-dom/client": "https://esm.sh/react-dom@19.0.0/client",
-    "react/": "https://esm.sh/react@19.0.0/",
-    "react-dom/": "https://esm.sh/react-dom@^19.2.3/"
+    "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
+    "react/": "https://esm.sh/react@^19.2.3/"
   }
 }
 </script>
 </head>
 <body>
     <div id="root"></div>
-    <!-- data-type="module" is critical for Babel to handle ES6 imports -->
     <script type="text/babel" data-type="module" data-presets="typescript,react" src="./index.tsx"></script>
 </body>
 </html>

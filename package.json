@@ -1,5 +1,5 @@
 {
-  "name": "star-ocean-3-item-creation-calculator",
+  "name": "so3-ic-pro-calc",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -9,7 +9,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "react": "19.0.0",
+    "react": "^19.2.3",
     "react-dom": "^19.2.3"
   },
   "devDependencies": {

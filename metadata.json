@@ -1,5 +1,10 @@
 {
-  "name": "Star Ocean 3 Item Creation Calculator",
-  "description": "A modern, high-performance calculator for Star Ocean: Till the End of Time item creation, featuring skill calculations, probability analysis, and cost range matching.",
+  "name": "SO3 IC Pro Calc",
+  "short_name": "SO3 Calc",
+  "description": "Professional Item Creation calculator for Star Ocean 3. Optimized for Android.",
+  "display": "standalone",
+  "orientation": "portrait",
+  "theme_color": "#020617",
+  "background_color": "#020617",
   "requestFramePermissions": []
 }
