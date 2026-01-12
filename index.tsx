@@ -74,7 +74,7 @@ const ITEMS: Item[] = RAW_ITEMS.map((item, idx) => ({
 }));
 
 /** --- APP --- **/
-const STORAGE_KEY = 'so3_calc_v3';
+const STORAGE_KEY = 'so3_calc_v4_final';
 const getTicks = (base: number, costMod: number) => 
   Array.from({ length: 11 }, (_, i) => Math.round(base * ((costMod + 100 + (i - 5)) / 100)));
 
@@ -96,6 +96,12 @@ const App: React.FC = () => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify({ cat: selectedCategoryId, invs: selectedInventorIds, spec: hasSpecialItem, item: selectedItemId }));
   }, [selectedCategoryId, selectedInventorIds, hasSpecialItem, selectedItemId]);
 
+  const resetAll = () => {
+    setSelectedInventorIds([]);
+    setHasSpecialItem(false);
+    setSelectedItemId(null);
+  };
+
   const selectedCategory = CATEGORIES[selectedCategoryId];
   const availableInventors = useMemo(() => INVENTORS.filter(inv => inv.skills[selectedCategoryId] > 0), [selectedCategoryId]);
   const team = useMemo(() => selectedInventorIds.map(id => INVENTORS.find(i => i.id === id)).filter((v): v is Inventor => !!v), [selectedInventorIds]);
@@ -113,13 +119,42 @@ const App: React.FC = () => {
 
   const suggestions = useMemo(() => {
     if (selectedItemId === null) return [];
+    
+    // Define comparison baseline (lowest member of current team)
+    const lowestMember = team.length > 0 ? team.reduce((l, c) => c.skills[selectedCategoryId] < l.skills[selectedCategoryId] ? c : l, team[0]) : null;
+
     return availableInventors
       .filter(inv => !selectedInventorIds.includes(inv.id))
       .map(inv => {
         const invSkill = inv.skills[selectedCategoryId];
-        let skillBoost = (selectedInventorIds.length < 3) ? invSkill : invSkill - Math.min(...team.map(t => t.skills[selectedCategoryId]));
-        const score = skillBoost + (Math.abs(Math.min(0, inv.costMod)) / 2);
-        return { inv, boost: skillBoost, cost: inv.costMod, score };
+        const isCompatible = ITEMS[selectedItemId].allowedInventors.includes(inv.id);
+        
+        let skillBoost = 0;
+        let costSavings = inv.costMod;
+
+        if (selectedInventorIds.length < 3) {
+          skillBoost = invSkill;
+        } else if (lowestMember) {
+          skillBoost = invSkill - lowestMember.skills[selectedCategoryId];
+          costSavings = inv.costMod - lowestMember.costMod;
+        }
+
+        const score = (skillBoost * 2) + (Math.abs(Math.min(0, costSavings)) * 1.5);
+        
+        let reason = "Versatile Support";
+        if (skillBoost > 15) reason = "Lead Specialist";
+        else if (costSavings < -15) reason = "Cost Efficiency Lead";
+        else if (isCompatible && skillBoost > 0) reason = "Tier Compatibility";
+        else if (invSkill > 80) reason = "Master Artisan";
+
+        return { 
+          inv, 
+          boost: skillBoost, 
+          costDelta: costSavings, 
+          score, 
+          reason,
+          isCompatible 
+        };
       })
       .filter(s => s.score > 0)
       .sort((a, b) => b.score - a.score)
@@ -149,9 +184,14 @@ const App: React.FC = () => {
   return (
     <div className="max-w-5xl mx-auto p-2 sm:p-4 text-slate-300 text-xs selection:bg-blue-500/30">
       <header className="mb-4 flex flex-col sm:flex-row items-center justify-between gap-4 border-b border-slate-800 pb-4">
-        <h1 className="font-black text-white text-base tracking-tighter flex items-center gap-2">
-          <div className="w-2.5 h-6 bg-blue-600 rounded-full shadow-[0_0_12px_rgba(37,99,235,0.6)]" /> SO3 <span className="text-slate-500">LAB</span>
-        </h1>
+        <div className="flex items-center gap-4">
+            <h1 className="font-black text-white text-base tracking-tighter flex items-center gap-2">
+            <div className="w-2.5 h-6 bg-blue-600 rounded-full shadow-[0_0_12px_rgba(37,99,235,0.6)]" /> SO3 <span className="text-slate-500">LAB</span>
+            </h1>
+            <button onClick={resetAll} className="px-3 py-1 bg-rose-950/40 hover:bg-rose-900/60 border border-rose-800/50 rounded-md text-[9px] font-black uppercase text-rose-400 transition-colors">
+                Clear All
+            </button>
+        </div>
         <div className="flex gap-2 overflow-x-auto pb-1 no-scrollbar max-w-full">
           {CATEGORIES.map(c => (
             <button key={c.id} onClick={() => { setSelectedCategoryId(c.id); setSelectedInventorIds([]); setSelectedItemId(null); }} 
@@ -163,19 +203,24 @@ const App: React.FC = () => {
       </header>
 
       <div className="grid grid-cols-1 md:grid-cols-12 gap-3">
+        {/* INVENTORS COLUMN */}
         <div className="md:col-span-4 space-y-3">
           <div className="bg-slate-900/50 rounded-lg border border-slate-800 p-2">
             <div className="flex justify-between items-center mb-2 px-1 text-slate-500 font-bold uppercase tracking-widest text-[10px]">
-              <span>Registry</span>
+              <span>Inventors</span>
               <span className="text-blue-500 font-mono">{selectedInventorIds.length}/3</span>
             </div>
             <div className="grid grid-cols-2 gap-1.5 max-h-[450px] overflow-y-auto pr-1 no-scrollbar">
               {availableInventors.map(inv => {
                 const active = selectedInventorIds.includes(inv.id);
+                const isCompatible = selectedItemId !== null && ITEMS[selectedItemId].allowedInventors.includes(inv.id);
                 return (
                   <button key={inv.id} onClick={() => setSelectedInventorIds(prev => active ? prev.filter(i => i !== inv.id) : (prev.length < 3 ? [...prev, inv.id] : prev))}
-                    className={`text-left p-2 rounded-md border transition-all ${active ? 'bg-blue-600/20 border-blue-500/40' : 'bg-slate-800/40 border-slate-700/50 hover:bg-slate-800'}`}>
-                    <div className={`truncate font-bold ${active ? 'text-blue-300' : 'text-slate-300'}`}>{inv.name}</div>
+                    className={`text-left p-2 rounded-md border transition-all ${active ? 'bg-blue-600/20 border-blue-500/40' : 'bg-slate-800/40 border-slate-700/50 hover:bg-slate-800'} ${isCompatible ? 'ring-1 ring-blue-500/20 shadow-[0_0_8px_rgba(59,130,246,0.05)]' : ''}`}>
+                    <div className="flex items-center justify-between">
+                      <div className={`truncate font-bold ${active ? 'text-blue-300' : 'text-slate-300'}`}>{inv.name}</div>
+                      {isCompatible && <div className="w-1.5 h-1.5 rounded-full bg-blue-500/60" title="Item Compatible" />}
+                    </div>
                     <div className="flex justify-between text-[9px] opacity-60 font-mono">
                       <span>S:{inv.skills[selectedCategoryId]}</span>
                       <span className={inv.costMod < 0 ? 'text-emerald-400 font-bold' : ''}>{inv.costMod}%</span>
@@ -191,6 +236,7 @@ const App: React.FC = () => {
           </div>
         </div>
 
+        {/* TEAM COLUMN */}
         <div className="md:col-span-4 space-y-3">
           <div className="bg-slate-900/50 rounded-lg border border-slate-800 p-3">
             <div className="grid grid-cols-2 gap-3 mb-4">
@@ -213,6 +259,7 @@ const App: React.FC = () => {
                   <div className="text-[10px] font-mono text-blue-400 w-5 text-right font-bold">{inv.skills[selectedCategoryId]}</div>
                 </div>
               ))}
+              {team.length === 0 && <div className="text-center py-4 text-slate-600 italic">No inventors assigned</div>}
             </div>
             <select className="w-full bg-slate-950 border border-slate-700 rounded-md p-3 outline-none font-black text-slate-200 disabled:opacity-30 text-[11px] uppercase tracking-tighter cursor-pointer" 
               value={selectedItemId || ''} disabled={!selectedInventorIds.length} onChange={e => setSelectedItemId(e.target.value ? +e.target.value : null)}>
@@ -223,22 +270,34 @@ const App: React.FC = () => {
 
           {suggestions.length > 0 && (
             <div className="bg-blue-600/5 rounded-lg border border-blue-500/20 p-3">
-              <div className="text-[10px] font-black uppercase text-blue-400/80 mb-2.5 flex items-center gap-2">
+              <div className="text-[10px] font-black uppercase text-blue-400 flex items-center gap-2 mb-3">
                 <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
-                Optimal Swaps
+                Optimal Deployment
               </div>
-              <div className="flex flex-wrap gap-2">
+              <div className="space-y-2">
                 {suggestions.map(s => (
                   <button key={s.inv.id} onClick={() => {
                     const lowest = team.reduce((l, c) => c.skills[selectedCategoryId] < l.skills[selectedCategoryId] ? c : l, team[0]);
                     setSelectedInventorIds(prev => prev.length < 3 ? [...prev, s.inv.id] : prev.map(id => id === lowest.id ? s.inv.id : id));
-                  }} className="flex items-center gap-2 px-3 py-2 bg-slate-900/80 border border-slate-700 rounded-md hover:border-blue-500 transition-all group">
-                    <div className="flex flex-col items-start">
-                      <span className="font-bold text-slate-200 group-hover:text-blue-300 transition-colors">{s.inv.name}</span>
-                      <div className="flex gap-1.5 mt-0.5">
-                         <span className={`text-[9px] font-black ${s.boost >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>{s.boost >= 0 ? '+' : ''}{s.boost}S</span>
-                         <span className={`text-[9px] font-black ${s.cost <= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>{s.cost > 0 ? '+' : ''}{s.cost}%C</span>
+                  }} className="w-full flex items-center justify-between p-2.5 bg-slate-900/80 border border-slate-700/50 rounded-md hover:border-blue-500 group transition-all">
+                    <div className="flex flex-col items-start min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className="font-black text-slate-200 group-hover:text-blue-300 transition-colors truncate">{s.inv.name}</span>
+                        <span className="text-[8px] px-1 bg-blue-500/10 text-blue-400 rounded-sm border border-blue-500/20 uppercase font-black">{s.reason}</span>
                       </div>
+                      <div className="flex gap-2 mt-1">
+                         <div className={`flex items-center gap-1 text-[9px] font-black ${s.boost >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                           <span className="opacity-40 text-slate-500 uppercase">Skill:</span>
+                           {s.boost >= 0 ? '+' : ''}{s.boost}
+                         </div>
+                         <div className={`flex items-center gap-1 text-[9px] font-black ${s.costDelta <= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                           <span className="opacity-40 text-slate-500 uppercase">Cost:</span>
+                           {s.costDelta > 0 ? '+' : ''}{s.costDelta}%
+                         </div>
+                      </div>
+                    </div>
+                    <div className="text-blue-500 group-hover:translate-x-0.5 transition-transform opacity-0 group-hover:opacity-100">
+                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M12 4v16m8-8H4" /></svg>
                     </div>
                   </button>
                 ))}
@@ -247,15 +306,27 @@ const App: React.FC = () => {
           )}
         </div>
 
+        {/* OUTCOMES COLUMN */}
         <div className="md:col-span-4 space-y-3">
           {selectedItemId !== null ? (
             <div className="bg-slate-900/50 rounded-lg border border-slate-800 p-3">
-              <div className="flex justify-between items-center mb-3 px-1">
-                <span className="font-black uppercase text-slate-500 tracking-tighter">Target Calibration</span>
-                <div className={`px-3 py-1 rounded-full font-black text-[10px] ${stats.probability >= 50 ? 'bg-emerald-500/10 text-emerald-400' : 'bg-rose-500/10 text-rose-400'}`}>
-                  {Math.max(0, stats.probability)}% SUCCESS
+              <div className="flex flex-col gap-1 mb-4">
+                <div className="flex justify-between items-center px-1">
+                  <span className="font-black uppercase text-slate-500 tracking-tighter">Outcomes</span>
+                  <span className={`text-[10px] font-black uppercase ${stats.probability >= 50 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                    {stats.probability >= 0 ? 'Optimal' : 'Compromised'}
+                  </span>
+                </div>
+                {/* Visual success bar */}
+                <div className="h-8 relative bg-slate-950 rounded-md border border-slate-800 flex items-center justify-center overflow-hidden">
+                    <div className={`absolute left-0 top-0 h-full transition-all duration-1000 ${stats.probability >= 50 ? 'bg-emerald-500/20' : stats.probability > 0 ? 'bg-orange-500/20' : 'bg-rose-500/20'}`} 
+                         style={{ width: `${Math.min(100, Math.max(0, stats.probability))}%` }} />
+                    <span className={`relative text-lg font-black italic tracking-tighter ${stats.probability >= 50 ? 'text-emerald-400' : stats.probability > 0 ? 'text-orange-400' : 'text-rose-400'}`}>
+                        {Math.max(0, stats.probability)}% <span className="text-[10px] uppercase font-bold tracking-widest not-italic ml-1">Chance</span>
+                    </span>
                 </div>
               </div>
+
               <div className="grid grid-cols-2 gap-2 mb-4 no-scrollbar">
                 {targetTicks.map((val, i) => {
                   const itemOverlaps = overlaps.filter(o => o.collidingValues.includes(val));
@@ -273,6 +344,7 @@ const App: React.FC = () => {
                   );
                 })}
               </div>
+              
               {overlaps.length > 0 && (
                 <div className="border-t border-slate-800 pt-4 space-y-3">
                   <div className="text-[10px] font-black uppercase text-rose-400/80 flex items-center gap-2">
@@ -297,7 +369,7 @@ const App: React.FC = () => {
             </div>
           ) : (
             <div className="h-48 bg-slate-900/20 rounded-lg border border-dashed border-slate-800 flex items-center justify-center text-slate-600 font-black uppercase tracking-widest text-center px-6">
-              Select an item to view price calibration
+              Select an item to view outcomes
             </div>
           )}
         </div>
@@ -305,7 +377,7 @@ const App: React.FC = () => {
       
       <footer className="mt-8 pt-4 border-t border-slate-800/50 flex justify-between text-[9px] text-slate-700 font-black uppercase tracking-widest">
         <span>Star Ocean 3</span>
-        <span>IC-LAB DASHBOARD V3.3</span>
+        <span>IC-LAB DASHBOARD V4.1</span>
       </footer>
     </div>
   );
