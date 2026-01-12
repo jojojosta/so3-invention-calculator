@@ -35,7 +35,6 @@ export interface CalculationResult {
 }
 
 // --- CONSTANTS (Consolidated) ---
-// Define the missing STORAGE_KEY used for localStorage persistence
 const STORAGE_KEY = 'so3_iclab_state';
 
 export const CATEGORIES: Category[] = [
@@ -181,6 +180,16 @@ const App: React.FC = () => {
     }));
   }, [selectedCategoryId, selectedInventorIds, hasSpecialItem, selectedItemId]);
 
+  // Handle AdSense initialization
+  useEffect(() => {
+    try {
+      // @ts-ignore
+      (window.adsbygoogle = window.adsbygoogle || []).push({});
+    } catch (e) {
+      console.error("AdSense error", e);
+    }
+  }, []);
+
   const handleReset = () => {
     setSelectedInventorIds([]);
     setHasSpecialItem(false);
@@ -323,14 +332,22 @@ const App: React.FC = () => {
             </label>
           </div>
 
-          <div className="bg-slate-900/30 rounded-lg border border-slate-800/50 p-3 overflow-hidden relative group">
+          <div className="bg-slate-900/30 rounded-lg border border-slate-800/50 p-3 overflow-hidden relative group min-h-[140px]">
              <div className="flex justify-between items-center mb-2">
-               <span className="text-[8px] font-black text-slate-600 uppercase tracking-widest">Sponsored Content</span>
+               <span className="text-[8px] font-black text-slate-600 uppercase tracking-widest">Sponsored</span>
                <span className="w-1 h-1 rounded-full bg-slate-700 group-hover:bg-blue-500 transition-colors" />
              </div>
-             <div className="h-20 bg-slate-950/50 rounded flex flex-col items-center justify-center border border-slate-800/40 text-center px-4">
-                <div className="text-[10px] text-slate-500 font-bold italic mb-1">Star Ocean: Till the End of Time</div>
-                <div className="text-[8px] text-slate-600">Remaster your experience with IC-LAB.</div>
+             <div className="rounded bg-slate-950/20 border border-slate-800/40 overflow-hidden flex items-center justify-center">
+                {/* 
+                  ADSENSE INJECTION SLOT: 
+                  Replace 'data-ad-client' and 'data-ad-slot' with your actual IDs from AdSense dashboard.
+                */}
+                <ins className="adsbygoogle"
+                     style={{ display: 'block', width: '100%', height: '100px' }}
+                     data-ad-client="ca-pub-XXXXXXXXXXXXXXXX"
+                     data-ad-slot="XXXXXXXXXX"
+                     data-ad-format="fluid"
+                     data-full-width-responsive="true"></ins>
              </div>
           </div>
         </div>

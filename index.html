@@ -1,9 +1,12 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no">
     <title>SO3 IC Calculator Pro</title>
+    <!-- AdSense Script - Replace YOUR_CLIENT_ID with your actual publisher ID -->
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-XXXXXXXXXXXXXXXX" crossorigin="anonymous"></script>
     <!-- Tailwind for styling -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Babel for on-the-fly TSX transpilation -->
@@ -59,11 +62,6 @@
 </head>
 <body>
     <div id="root"></div>
-    <!-- 
-      Using type="text/babel" tells the Babel standalone transformer to transpile this file.
-      data-type="module" ensures the transpiled code is treated as an ES module.
-      This is the standard pattern for running TSX in the browser without a build step.
-    -->
     <script type="text/babel" data-type="module" data-presets="typescript,react" src="./index.tsx"></script>
 </body>
 </html>
