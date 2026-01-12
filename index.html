@@ -5,7 +5,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SO3 IC Calculator</title>
+    <!-- Tailwind for styling -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Babel for on-the-fly TSX transpilation (Essential for GitHub Pages without a build step) -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
     <style>
       @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
       body { 
@@ -18,7 +22,7 @@
       .no-scrollbar::-webkit-scrollbar { display: none; }
       .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
       
-      /* Target the inventor list and other overflow areas specifically */
+      /* Target all areas specifically to ensure no scrollbars appear */
       ::-webkit-scrollbar { display: none; }
       * { -ms-overflow-style: none; scrollbar-width: none; }
 
@@ -30,18 +34,25 @@
         background-size: 1rem;
       }
     </style>
-<script type="importmap">
+
+    <script type="importmap">
 {
   "imports": {
-    "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
-    "react": "https://esm.sh/react@^19.2.3",
-    "react/": "https://esm.sh/react@^19.2.3/"
+    "react-dom/client": "https://esm.sh/react-dom@19.0.0/client",
+    "react": "https://esm.sh/react@19.0.0",
+    "react/": "https://esm.sh/react@19.0.0/",
+    "react-dom/": "https://esm.sh/react-dom@^19.2.3/"
   }
 }
 </script>
 </head>
 <body>
     <div id="root"></div>
-    <script type="module" src="/index.tsx"></script>
+    <!-- 
+      Note: We use data-type="module" so Babel knows to treat imports correctly, 
+      and data-presets="typescript,react" to handle the .tsx syntax.
+      Path is changed to ./index.tsx for GitHub Pages subdirectory support.
+    -->
+    <script type="text/babel" data-type="module" data-presets="typescript,react" src="./index.tsx"></script>
 </body>
 </html>
