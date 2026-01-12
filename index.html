@@ -7,7 +7,7 @@
     <title>SO3 IC Calculator</title>
     <!-- Tailwind for styling -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Babel for on-the-fly TSX transpilation (Essential for GitHub Pages without a build step) -->
+    <!-- Babel for on-the-fly TSX transpilation -->
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     
     <style>
@@ -18,11 +18,8 @@
         color: #f8fafc; 
         overflow-x: hidden;
       }
-      /* Hide scrollbars for all browsers */
       .no-scrollbar::-webkit-scrollbar { display: none; }
       .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-      
-      /* Target all areas specifically to ensure no scrollbars appear */
       ::-webkit-scrollbar { display: none; }
       * { -ms-overflow-style: none; scrollbar-width: none; }
 
@@ -38,8 +35,8 @@
     <script type="importmap">
 {
   "imports": {
-    "react-dom/client": "https://esm.sh/react-dom@19.0.0/client",
     "react": "https://esm.sh/react@19.0.0",
+    "react-dom/client": "https://esm.sh/react-dom@19.0.0/client",
     "react/": "https://esm.sh/react@19.0.0/",
     "react-dom/": "https://esm.sh/react-dom@^19.2.3/"
   }
@@ -48,11 +45,7 @@
 </head>
 <body>
     <div id="root"></div>
-    <!-- 
-      Note: We use data-type="module" so Babel knows to treat imports correctly, 
-      and data-presets="typescript,react" to handle the .tsx syntax.
-      Path is changed to ./index.tsx for GitHub Pages subdirectory support.
-    -->
+    <!-- data-type="module" is critical for Babel to handle ES6 imports -->
     <script type="text/babel" data-type="module" data-presets="typescript,react" src="./index.tsx"></script>
 </body>
 </html>

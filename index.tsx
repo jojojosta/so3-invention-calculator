@@ -1,23 +1,44 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
 import ReactDOM from 'react-dom/client';
+// CRITICAL: Explicit .ts extension for GitHub Pages compatibility
 import { CATEGORIES, INVENTORS, ITEMS } from './constants.ts';
 import { Inventor, CalculationResult } from './types.ts';
 
 const STORAGE_KEY = 'so3_calc_v3';
 
-// Logic for getting the 11 possible price ticks
 const getTicks = (base: number, costMod: number) => 
   Array.from({ length: 11 }, (_, i) => Math.round(base * ((costMod + 100 + (i - 5)) / 100)));
 
 const App: React.FC = () => {
-  const [selectedCategoryId, setSelectedCategoryId] = useState<number>(() => JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}').cat || 0);
-  const [selectedInventorIds, setSelectedInventorIds] = useState<number[]>(() => JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}').invs || []);
-  const [hasSpecialItem, setHasSpecialItem] = useState<boolean>(() => JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}').spec || false);
-  const [selectedItemId, setSelectedItemId] = useState<number | null>(() => JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}').item || null);
+  const [selectedCategoryId, setSelectedCategoryId] = useState<number>(() => {
+    try {
+      return JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}').cat || 0;
+    } catch { return 0; }
+  });
+  const [selectedInventorIds, setSelectedInventorIds] = useState<number[]>(() => {
+    try {
+      return JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}').invs || [];
+    } catch { return []; }
+  });
+  const [hasSpecialItem, setHasSpecialItem] = useState<boolean>(() => {
+    try {
+      return JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}').spec || false;
+    } catch { return false; }
+  });
+  const [selectedItemId, setSelectedItemId] = useState<number | null>(() => {
+    try {
+      return JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}').item || null;
+    } catch { return null; }
+  });
 
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify({ cat: selectedCategoryId, invs: selectedInventorIds, spec: hasSpecialItem, item: selectedItemId }));
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ 
+      cat: selectedCategoryId, 
+      invs: selectedInventorIds, 
+      spec: hasSpecialItem, 
+      item: selectedItemId 
+    }));
   }, [selectedCategoryId, selectedInventorIds, hasSpecialItem, selectedItemId]);
 
   const selectedCategory = CATEGORIES[selectedCategoryId];
@@ -37,22 +58,18 @@ const App: React.FC = () => {
 
   const suggestions = useMemo(() => {
     if (selectedItemId === null) return [];
-    
     return availableInventors
       .filter(inv => !selectedInventorIds.includes(inv.id))
       .map(inv => {
         const invSkill = inv.skills[selectedCategoryId];
         let skillBoost = 0;
-        let costImpact = inv.costMod;
-
         if (selectedInventorIds.length < 3) {
           skillBoost = invSkill;
         } else {
           const lowestSkill = Math.min(...team.map(t => t.skills[selectedCategoryId]));
           skillBoost = invSkill - lowestSkill;
         }
-
-        const score = skillBoost + (Math.abs(Math.min(0, costImpact)) / 2);
+        const score = skillBoost + (Math.abs(Math.min(0, inv.costMod)) / 2);
         return { inv, boost: skillBoost, cost: inv.costMod, score };
       })
       .filter(s => s.score > 0)
@@ -75,7 +92,6 @@ const App: React.FC = () => {
 
   const overlaps = useMemo(() => {
     if (selectedItemId === null || targetTicks.length === 0) return [];
-    
     return ITEMS.filter(item => 
       item.categoryId === selectedCategoryId && 
       item.id !== selectedItemId && 
@@ -84,9 +100,8 @@ const App: React.FC = () => {
     .map(item => {
       const itemTicks = getTicks(item.baseCost, stats.totalCostMod);
       const collidingValues = itemTicks.filter(tick => targetTicks.includes(tick));
-      
       if (collidingValues.length > 0) {
-        return { item, isIdentical: item.baseCost === ITEMS[selectedItemId!].baseCost, collidingValues };
+        return { item, collidingValues };
       }
       return null;
     })
@@ -227,7 +242,6 @@ const App: React.FC = () => {
                       <div key={o.item.id} className="text-[10px] bg-slate-950/50 p-3 rounded-md border border-slate-800/50 flex flex-col gap-1">
                         <div className="flex justify-between items-start">
                           <span className="font-black text-slate-200 uppercase tracking-tight truncate pr-2">{o.item.name}</span>
-                          <span className="text-slate-600 font-mono italic text-[9px] shrink-0 font-bold">BASE:{o.item.baseCost}</span>
                         </div>
                         <div className="flex flex-wrap gap-1 mt-1">
                           {o.collidingValues.map(v => (
@@ -259,5 +273,5 @@ const App: React.FC = () => {
 const rootElement = document.getElementById('root');
 if (rootElement) {
   const root = ReactDOM.createRoot(rootElement);
-  root.render(<React.StrictMode><App /></React.StrictMode>);
+  root.render(<App />);
 }
