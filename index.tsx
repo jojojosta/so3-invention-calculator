@@ -1,5 +1,5 @@
 
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import ReactDOM from 'react-dom/client';
 
 // --- TYPES (Consolidated) ---
@@ -141,6 +141,41 @@ export const ITEMS: Item[] = RAW_ITEMS.map((item, idx) => ({
   allowedInventors: DX_MAP[item[4] as number]
 }));
 
+// --- COMPONENTS ---
+
+/**
+ * Robust AdSense component for React 19.
+ * Ensures initialization happens exactly once after the slot is ready.
+ */
+const AdSenseSlot: React.FC = () => {
+  const initialized = useRef(false);
+
+  useEffect(() => {
+    if (!initialized.current) {
+      try {
+        // @ts-ignore
+        (window.adsbygoogle = window.adsbygoogle || []).push({});
+        initialized.current = true;
+      } catch (e) {
+        console.error("AdSense push failed", e);
+      }
+    }
+  }, []);
+
+  return (
+    <div className="w-full bg-slate-950/20 border border-slate-800/40 rounded overflow-hidden flex items-center justify-center min-h-[100px]">
+      <ins
+        className="adsbygoogle"
+        style={{ display: 'block', minWidth: '120px', minHeight: '100px', width: '100%' }}
+        data-ad-client="ca-pub-4539336788142245"
+        data-ad-slot="XXXXXXXXXX" // Ensure you have a valid slot ID here
+        data-ad-format="fluid"
+        data-full-width-responsive="true"
+      />
+    </div>
+  );
+};
+
 // --- APP COMPONENT (Main) ---
 const getTicksHelper = (base: number, costMod: number) => 
   Array.from({ length: 11 }, (_, i) => Math.round(base * ((costMod + 100 + (i - 5)) / 100)));
@@ -179,16 +214,6 @@ const App: React.FC = () => {
       item: selectedItemId 
     }));
   }, [selectedCategoryId, selectedInventorIds, hasSpecialItem, selectedItemId]);
-
-  // Handle AdSense initialization
-  useEffect(() => {
-    try {
-      // @ts-ignore
-      (window.adsbygoogle = window.adsbygoogle || []).push({});
-    } catch (e) {
-      console.error("AdSense error", e);
-    }
-  }, []);
 
   const handleReset = () => {
     setSelectedInventorIds([]);
@@ -337,18 +362,7 @@ const App: React.FC = () => {
                <span className="text-[8px] font-black text-slate-600 uppercase tracking-widest">Sponsored</span>
                <span className="w-1 h-1 rounded-full bg-slate-700 group-hover:bg-blue-500 transition-colors" />
              </div>
-             <div className="rounded bg-slate-950/20 border border-slate-800/40 overflow-hidden flex items-center justify-center">
-                {/* 
-                  ADSENSE INJECTION SLOT: 
-                  Replace 'data-ad-client' and 'data-ad-slot' with your actual IDs from AdSense dashboard.
-                */}
-                <ins className="adsbygoogle"
-                     style={{ display: 'block', width: '100%', height: '100px' }}
-                     data-ad-client="ca-pub-XXXXXXXXXXXXXXXX"
-                     data-ad-slot="XXXXXXXXXX"
-                     data-ad-format="fluid"
-                     data-full-width-responsive="true"></ins>
-             </div>
+             <AdSenseSlot />
           </div>
         </div>
 
