@@ -6,7 +6,7 @@ import ReactDOM from 'react-dom/client';
 interface Category { id: number; name: string; specialItem: string; }
 interface Inventor { id: number; name: string; timeMod: number; costMod: number; skills: number[]; }
 interface Item { id: number; name: string; categoryId: number; baseCost: number; difficulty: number; allowedInventors: number[]; }
-interface CalculationResult { totalSkill: number; totalCostMod: number; probability: number; baseCost: number; }
+interface CalculationResult { totalSkill: number; totalTimeMod: number; totalCostMod: number; probability: number; baseCost: number; }
 
 /** --- CONSTANTS --- **/
 const CATEGORIES: Category[] = [
