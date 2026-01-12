@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -60,7 +59,11 @@
 </head>
 <body>
     <div id="root"></div>
-    <!-- Explicitly reference index.tsx for the Babel transformer -->
+    <!-- 
+      Using type="text/babel" tells the Babel standalone transformer to transpile this file.
+      data-type="module" ensures the transpiled code is treated as an ES module.
+      This is the standard pattern for running TSX in the browser without a build step.
+    -->
     <script type="text/babel" data-type="module" data-presets="typescript,react" src="./index.tsx"></script>
 </body>
 </html>
